@@ -1,5 +1,62 @@
 const router = require('express').Router();
 const db = require('../modules/database');
+const hash = require('../modules/password');
+
+router.post('/install/user', (req, res) => {
+    let email = req.body.email;
+    let password = req.body.password;
+
+    let query = `SELECT * FROM Companys WHERE email = ? LIMIT 1`;
+
+    db.query(query, [email])
+        .then(result => {
+            if(result[0]) {
+                let user = result[0];
+                hash.getHash(password, user.salt)
+                    .subscribe(pw => {
+                        if(pw == user.password) {
+                            delete user.password;
+                            delete user.salt;
+
+                            res.status(200).json(user);
+                        } else {
+                            res.status(400).json({ error: 'not matched password' });
+                        }
+                    });
+            } else {
+                res.json(404).json({ error: 'not signed user' });
+            }
+        })
+        .catch(err => {
+            res.status(500).json({ error: 'server error' });
+        });
+});
+
+router.get('/machineType', (req, res)=> {
+    let query = `SELECT * FROM MachineTypes`;
+
+    db.query(query)
+        .then(result => {
+            res.status(200).json(result);
+        });
+});
+
+router.post('/install/machine', (req, res) => {
+    let machine = req.body;
+    let query = `INSERT INTO Machines SET ?`;
+
+    machine.create_at = 'NOW()';
+
+    db.query(query, [machine])
+        .then(result => {
+            if (result) {
+                res.status(200).json({ success: true });
+            }
+        })
+        .catch(err => {
+            res.status(500).json({ error: err });
+        });
+});
 
 // 업체정보 가져오기
 router.get('/user', (req, res) => {
