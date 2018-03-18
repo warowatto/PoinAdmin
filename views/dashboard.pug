@@ -4,45 +4,134 @@ extend layout
 //- 미결제된 판매현황 / 기 결제된 판매현황
 //- 설치된 장치목록
 
+block csss
+    link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.0/css/bootstrap-datepicker3.min.css")
+    style.
+        .datepicker.dropdown-menu {
+            visibility: visible;
+            opacity: 1;
+            width: auto;
+        }
+
 block contents
     #content.col-md-12
         //- 총 판매 현황(2분류로 나눠짐, 결제가 되었는지?)
-        h4 {{ title }}
         .card
             .header
-                h4.title Striped Table with Hover
-                p.category Here is a subtitle for this table
-                select.from-control
-                    option 미수금
-                    option 수급완료
+                h4.title PayOT 지불현황
             .content.table-responsive.table-full-width
                 table.table.table-hover.table-striped
                     thead
-                        th ID
-                        th Name
-                        th Salary
-                        th Country
-                        th City
+                        th 제목
+                        th 내용
+                        th 가격
+                        th 일자
+                    tbody
+                        tr(v-for="payment in payments")
+                            td {{ payment.title }}
+                            td {{ payment.description }}
+                            td {{ payment.amount }}
+                            td {{ convertDate(payment.pay_at) }}
+        //- 상품 판매현황
+        .card
+            .header
+                h4.title 상품별 판매현황
+                .row
+                    .col-md-8
+                        .input-group.input-daterange
+                            input.datepicker.form-control(type="text" v-model="startDate")
+                            .input-group-addon to
+                            input.datepicker.form-control(type="text" v-model="endDate")
+                    .col-md-2
+                        select.from-control(v-model="bill" v-on:change="update")
+                            option 미수금
+                            option 수급완료
+                    .col-md-2
+                        button.btn.btn-info.btn-fill.pull-right(v-on:click="update") 조회하기
+            .content.table-responsive.table-full-width
+                table.table.table-hover.table-striped
+                    thead
+                        th 상품명
+                        th 판매액
+                        th 판매한 장치수
+                        th 판매횟수
                     tbody
                         tr(v-for="sell in sells")
-                            td 1
-                            td Dakota Rice
-                            td $36,738
-                            td Niger
-                            td Oud-Turnhout
+                            td {{ sell.name }}
+                            td {{ sell.total }}
+                            td {{ sell.machines }}
+                            td {{ sell.counter }}
 
 block scripts
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.0/js/bootstrap-datepicker.min.js")
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.0/locales/bootstrap-datepicker.ko.min.js")
+    
     script.
+        $(function() {
+            $('.input-daterange input').each(function() {
+                $(this).datepicker({
+                    format: 'yyyy-mm-dd',
+                    language: 'ko'
+                });
+            });
+        });
+
         var vm = new Vue({
             el: '#content',
             data() {
                 return {
-                    title: 'title222',
-                    sells: []
+                    bill: '미수금',
+                    payments: [],
+                    sells: [],
+                    startDate: '2018-01-01',
+                    endDate: '2018-03-30'
                 }
             },
             created () {
                 let self = this;
+                let type = self.isBills() ? 'true' : 'false';
+                let path = `/api/sellList/${self.startDate}/${self.endDate}/${type}`;
+                axios.get(path)
+                    .then(result => {
+                        let data = result.data;
+                        self.sells = data;
+                    });
 
+                axios.get('/api/payments')
+                    .then(result => {
+                        self.payments = result.data;
+                    });
+            },
+            methods: {
+                convertDate: function(date) {
+                    var d = new Date(date),
+                        month = '' + (d.getMonth() + 1),
+                        day = '' + d.getDate(),
+                        year = d.getFullYear();
+
+                    if (month.length < 2) month = '0' + month;
+                    if (day.length < 2) day = '0' + day;
+
+                    return [year, month, day].join('-');
+                },
+                update: function() {
+                    let self = this;
+                    let type = self.isBills() ? 'true' : 'false';
+                    let path = `/api/sellList/${self.startDate}/${self.endDate}/${type}`;
+                    console.log(path);
+                    axios.get(path)
+                        .then(result => {
+                            let data = result.data;
+                            self.sells = data;
+                        });
+                },
+                isBills: function() {
+                    return this.bill == '수급완료';
+                }
+            },
+            computed: {
+                isBills: function() {
+                    return this.bill == '수급완료';
+                }
             }
-        })
+        });

@@ -1,4 +1,140 @@
 const router = require('express').Router();
 const db = require('../modules/database');
 
+// 업체정보 가져오기
+router.get('/user', (req, res) => {
+    let query = `SELECT email, name, tel, phone, fax, address, bankName, accountNumber, accountName, paymentInfo FROM Companys WHERE id = ? LIMIT 1`;
+    let companyId = 1;
+
+    db.query(query, [companyId])
+        .then(result => {
+            let user = result[0];
+            res.status(200).json(user);
+        });
+});
+
+// 업체 상품 정보
+router.get('/products', (req, res) => {
+    let query = `SELECT * FROM Products WHERE companyId = ?`;
+    let companyId = 1;
+
+    db.query(query, [companyId])
+        .then(result => {
+            res.status(200).json(result);
+        })
+        .catch(err => {
+            res.status(500).json({ error: err });
+        });
+});
+
+// 상품등록하기
+router.post('/product', (req, res) => {
+    let product = req.body;
+    let query = `INSERT INTO Products SET ?`;
+    let companyId = 1;
+    product.companyId = companyId;
+    product.create_at = new Date();
+
+    db.query(query, [product])
+        .then(result => {
+            res.status(200).json({ sucess: true })
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({ error: err });
+        });
+});
+
+router.get('/payments', (req, res) => {
+    let companyId = 1;
+    let query = `SELECT * FROM CompanyPayments WHERE companyId = ?`;
+
+    db.query(query, [companyId])
+        .then(result => {
+            res.status(200).json(result);
+        })
+        .catch(err => {
+            res.status(500).json({ error: err });
+        });
+});
+
+// 장치 목록 가져오기
+router.get('/machines', (req, res) => {
+    let query = `SELECT * FROM Machines WHERE companyId = ?`;
+    let companyId = 1;
+
+    db.query(query, [companyId])
+        .then(result => {
+            res.status(200).json(result);
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({ error: err });
+        });
+});
+
+// 상품 삭제
+router.delete('/product/:id', (req, res) => {
+    let machineId = req.params.id;
+    let query = `DELETE FROM Products WHERE id = ?`;
+
+    db.query(query, [machineId])
+        .then(result => {
+            res.status(200).json({ sucess: true });
+        })
+        .catch(err => {
+            res.status(500).json({ error: err });
+        });
+});
+
+// 업체정보 변경
+router.put('/user', (req, res) => {
+    let params = req.body.params;
+    let companyId = 1;
+    
+    delete params.email;
+
+    let query = `UPDATE Companys SET ? WHERE id = ?`;
+
+    db.query(query, [params, companyId])
+        .then(result => {
+            res.status(200).json({ success: true });
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({ error: err });
+        });
+});
+
+// 상품별 종합 판매현황(PayOT 미결제 OR 결제 처리 사항)
+router.get('/sellList/:start/:end/:state', (req, res) => {
+    let startDate = req.params.start;
+    let endDate = req.params.start;
+    let state = req.params.state == 'true';
+    
+    let query = `
+    SELECT
+        Payments.productId as id,
+        Products.name as name,
+        COUNT(Payments.id) as counter,
+        COUNT(DISTINCT machineId) as machines,
+        SUM(defaultPrice) as total
+    FROM Payments
+    LEFT OUTER JOIN Products ON Products.id = Payments.productId
+    WHERE 
+        Payments.companyId = ? 
+        AND Payments.sendToCompany = ?
+    GROUP BY Payments.productId`;
+
+    let companyId = 1;
+    db.query(query, [companyId, state, endDate, startDate])
+        .then(result => {
+            res.status(200).json(result);
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json(err);
+        });
+});
+
 module.exports = router;

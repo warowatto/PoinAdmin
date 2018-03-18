@@ -1,0 +1,124 @@
+extend layout
+
+
+
+block contents
+    #content.col-md-12
+        .card
+            .header
+                h4.title 상품 추가
+            .content
+                form
+                    .row
+                        .col-md-4
+                            .form-group
+                                label 상품명
+                                input.form-control(type="text" placeholder="상품명" v-model="addProduct.name")
+                        .col-md-8
+                            .form-group
+                                label 상품설명
+                                input.form-control(type="text" placeholder="상품설명" v-model="addProduct.description")
+                    .row
+                        .col-md-6
+                            .form-group
+                                label 판매가
+                                input.form-control(type="text" placeholder="원" v-model="addProduct.price")
+                        .col-md-6
+                            .form-group
+                                label 장치동작가
+                                input.form-control(type="text" placeholder="원" v-model="addProduct.machinePrice")
+                    button.btn.btn-info.btn-fill.pull-right(v-on:click="insertProduct") 상품 추가
+                    .clearfix
+
+        .card
+            .header
+                h4.title 상품목록
+                p.category 
+            .content.table-responsive.table-full-width
+                table.table.table-hover.table-striped
+                    thead
+                        th #
+                        th 상품명
+                        th 상품설명
+                        th 판매가격
+                        th 장치동작가격
+                        th 삭제
+                    tbody
+                        tr(v-for="product in products")
+                            td 
+                                input(type="checkbox" v-model="product.checked")
+                            td {{ product.name }}
+                            td {{ product.description }}
+                            td {{ product.price }}
+                            td {{ product.machinePrice }}
+                            td 
+                                button.btn.btn-danger(v-on:click="removeProduct(product.id)") 삭제하기
+        
+        button.btn.btn-info.btn-fill.pull-right(v-on:click="wrap") 상품 등록하기
+
+block scripts
+    script.
+        let vm = new Vue({
+            el: '#content',
+            data() {
+                return {
+                    products: [],
+                    addProduct: {
+                        name: '',
+                        description: '',
+                        price: '',
+                        machinePrice: '',
+                        visible: false
+                    }
+                }
+            },
+            created() {
+                let self = this;
+                axios.get('/api/products')
+                    .then(result => {
+                        self.products = result.data;
+                    });
+            },
+            methods: {
+                refresh: function() {
+                    let self = this;
+                    axios.get('/api/products')
+                        .then(result => {
+                            self.products = result.data;
+                        });
+                },
+                insertProduct: function() {
+                    let self = this;
+                    let path = '/api/product';
+                    axios.post(path, self.addProduct)
+                        .then(result => {
+                            self.products.push(self.addProduct);
+                            self.clearForm();
+                        });
+                },
+                removeProduct: function(id) {
+                    let self = this;
+                    let path = '/api/product/' + id;
+
+                    axios.delete(path)
+                        .then(result => {
+                            self.refresh();
+                        });
+                },
+                wrap: function() {
+                    let self = this;
+                    
+                    let selectProducts = self.products
+                                            .filter(item => { return item.checked })
+                                            .map(item => { return item.id });
+
+                    axios.post('/install', selectProducts)
+                        .then(result => {
+                            self.visible = true;
+                        });
+                }
+            },
+            computed: {
+
+            }
+        });

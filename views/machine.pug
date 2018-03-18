@@ -1,0 +1,80 @@
+extend layout
+
+block contents
+    #content
+        .col-md-6
+            .card
+                .header
+                    h4.title 설치된 장치 목록
+                    p.category 총 {{ machines.length }}의 장치가 설치되었습니다
+                .content.table-responsive.table-full-width
+                    table.table.table-hover.table-striped
+                        thead
+                            th MAC
+                            th 장치명
+                            th 사용자 확인명
+                            th 설치일자
+                            th 동작여부
+                        tbody
+                            tr(v-for="m in machines")
+                                td {{ m.macAddress }}
+                                td {{ m.deviceName }}
+                                td {{ m.displayName }}
+                                td {{ convertDate(m.create_at) }}
+                                td {{ m.isRunning == 1 ? "가동중" : "중지됨" }}
+        
+        .col-md-6
+            .card
+                .header
+                    h4.title 설치된 장치 목록
+                .content.table-responsive.table-full-width
+                    table.table.table-hover.table-striped
+                        thead
+                            th MAC
+                            th 장치명
+                            th 사용자 확인명
+                            th 설치일자
+                            th 동작여부
+                        tbody
+                            tr(v-for="m in machines")
+                                td {{ m.macAddress }}
+                                td {{ m.deviceName }}
+                                td {{ m.displayName }}
+                                td {{ convertDate(m.create_at) }}
+                                td {{ m.isRunning == 1 ? "가동중" : "중지됨" }}
+
+
+block scripts
+    script.
+        let vm = new Vue({
+            el: '#content',
+            data() {
+                return {
+                    machines: [],
+                }
+            },
+            created() {
+                let self = this;
+                let path = '/api/machines';
+                axios.get(path)
+                    .then(result => {
+                        self.machines = result.data;
+                    });
+            },
+            methods: {
+                convertDate: function(date) {
+                    var d = new Date(date),
+                        month = '' + (d.getMonth() + 1),
+                        day = '' + d.getDate(),
+                        year = d.getFullYear();
+
+                    if (month.length < 2) month = '0' + month;
+                    if (day.length < 2) day = '0' + day;
+
+                    return [year, month, day].join('-');
+                }
+            },
+            computed: {
+
+            }
+        });

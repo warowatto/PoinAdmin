@@ -1,0 +1,91 @@
+extend layout
+
+block contents
+    #userinfo.col-md-8
+        .card
+            .header
+                h4.title 업체 정보
+            .content
+                form
+                    .row
+                        .col-md-5
+                            .form-group
+                                label 업체명 (disabled)
+                                input.form-control(type="text" disabled="" placeholder="Company" v-model="user.name")
+                        .col-md-7
+                            .form-group
+                                label(for="exampleInputEmail1") 이메일
+                                input.form-control(type="email" disabled="" placeholder="이메일" v-model="user.email")
+                    .row
+                        .col-md-6
+                            .form-group
+                                label 계좌은행
+                                input.form-control(type="text" placeholder="계좌은행" v-model="user.bankName")
+                        .col-md-6
+                            .form-group
+                                label 계좌주
+                                input.form-control(type="text" placeholder="계좌주" v-model="user.accountName")
+                    .row
+                        .col-md-4
+                            .form-group
+                                label 전화번호
+                                input.form-control(type="text" placeholder="전화번호" v-model="user.tel")
+                        .col-md-4
+                            .form-group
+                                label 휴대전화번호
+                                input.form-control(type="text" placeholder="휴대전화번호" v-model="user.phone")
+                        .col-md-4
+                            .form-group
+                                label FAX
+                                input.form-control(type="text" placeholder="FAX" v-model="user.fax")
+                    .row
+                        .col-md-12
+                            .form-group
+                                label 주소
+                                input.form-control(type="text" placeholder="주소" v-model="user.address")
+                    .row
+                        .col-md-12
+                            .form-group
+                                label 계좌번호
+                                input.form-control(type="text" placeholder="계좌번호" v-model="user.accountNumber")
+                    .row
+                        .col-md-12
+                            .form-group
+                                label 결제시 알림사항
+                                textarea.form-control(rows="5" placeholder="Here can be your description" v-model="user.paymentInfo")
+                    button.btn.btn-info.btn-fill.pull-right(v-on:click="update(user)") 프로필 수정
+                    .clearfix
+
+            .alert.alert-info(v-if="showDialog")
+                span This is a plain notification
+
+block scripts
+    script.
+        let vm = new Vue({
+            el: '#userinfo',
+            data () {
+                return {
+                    user: {},
+                    showDialog: false
+                }
+            },
+            created() {
+                let self = this;
+                axios.get('/api/user')
+                    .then(result => {
+                        self.user = result.data;
+                    });
+            },
+            methods: {
+                update: function(user) {
+                    let self = this;
+                    axios.put('/api/user', { params: user })
+                        .then(result => {
+                            self.showDialog = true;
+                        })
+                        .catch(err => {
+                            self.showDialog = false;
+                        });
+                }
+            }
+        });
