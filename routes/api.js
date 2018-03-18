@@ -60,7 +60,7 @@ router.get('/payments', (req, res) => {
 
 // 장치 목록 가져오기
 router.get('/machines', (req, res) => {
-    let query = `SELECT * FROM Machines WHERE companyId = ?`;
+    let query = `SELECT * FROM Machines WHERE companyId = ? ORDER BY create_at DESC`;
     let companyId = 1;
 
     db.query(query, [companyId])
@@ -69,6 +69,23 @@ router.get('/machines', (req, res) => {
         })
         .catch(err => {
             console.log(err);
+            res.status(500).json({ error: err });
+        });
+});
+
+// 장치 상태 변경
+router.put('/machine', (req, res) => {
+    let machine = req.body;
+    let machineId = machine.id;
+    delete machine.id;
+
+    let query = `UPDATE Machines SET ? WHERE id = ?`;
+
+    db.query(query, [machine, machineId])
+        .then(result => {
+            res.status(200).json({ scuccess: true });
+        })
+        .catch(err => {
             res.status(500).json({ error: err });
         });
 });
@@ -124,10 +141,12 @@ router.get('/sellList/:start/:end/:state', (req, res) => {
     WHERE 
         Payments.companyId = ? 
         AND Payments.sendToCompany = ?
+        AND DATE(Payments.pay_at) > ?
+        AND DATE(Payments.pay_at) < ?
     GROUP BY Payments.productId`;
 
     let companyId = 1;
-    db.query(query, [companyId, state, endDate, startDate])
+    db.query(query, [companyId, state, startDate, endDate])
         .then(result => {
             res.status(200).json(result);
         })
@@ -137,7 +156,7 @@ router.get('/sellList/:start/:end/:state', (req, res) => {
         });
 });
 
-router.get('/sellList', (req, res) => {
+router.get('/all/:startDate/:endDate', (req, res) => {
     let query = `
         SELECT
             *
@@ -146,11 +165,15 @@ router.get('/sellList', (req, res) => {
         LEFT JOIN Products ON Payments.productId = Products.id
         WHERE
             Payments.companyId = ?
+            AND DATE(Payments.pay_at) >= ? AND DATE(Payments.pay_at) <= ?
         ORDER BY Payments.pay_at DESC`;
+
+    let startDate = req.query.startDate;
+    let endtDate = req.query.endDate;
 
     let companyId = 1;
 
-    db.query(query, [companyId])
+    db.query(query, [companyId, startDate, endtDate])
         .then(result => {
             res.status(200).json(result);
         })

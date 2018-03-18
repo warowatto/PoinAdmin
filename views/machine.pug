@@ -21,7 +21,9 @@ block contents
                                 td {{ m.deviceName }}
                                 td {{ m.displayName }}
                                 td {{ convertDate(m.create_at) }}
-                                td {{ m.isRunning == 1 ? "가동중" : "중지됨" }}
+                                td
+                                    button.btn.btn-success.btn-fill.pull-right(v-if="m.isRunning == 0" v-on:click="updateMachine(m)") 동작
+                                    button.btn.btn-danger.btn-fill.pull-right(v-if="m.isRunning == 1" v-on:click="updateMachine(m)") 동작정지
         
         .col-md-6
             .card
@@ -41,7 +43,6 @@ block contents
                                 td {{ m.deviceName }}
                                 td {{ m.displayName }}
                                 td {{ convertDate(m.create_at) }}
-                                td {{ m.isRunning == 1 ? "가동중" : "중지됨" }}
 
 
 block scripts
@@ -62,6 +63,14 @@ block scripts
                     });
             },
             methods: {
+                update: function() {
+                    let self = this;
+                    let path = '/api/machines';
+                    axios.get(path)
+                        .then(result => {
+                            self.machines = result.data;
+                        });
+                },
                 convertDate: function(date) {
                     var d = new Date(date),
                         month = '' + (d.getMonth() + 1),
@@ -72,6 +81,15 @@ block scripts
                     if (day.length < 2) day = '0' + day;
 
                     return [year, month, day].join('-');
+                },
+                updateMachine: function(machine) {
+                    let self = this;
+                    let path = '/api/machine';
+
+                    axios.put(path, { id: machine.id, isRunning: !machine.isRunning })
+                        .then(result => {
+                            self.update();
+                        });
                 }
             },
             computed: {
