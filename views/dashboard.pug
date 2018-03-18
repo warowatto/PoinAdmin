@@ -1,0 +1,48 @@
+extend layout
+
+//- 총 판매 현황
+//- 미결제된 판매현황 / 기 결제된 판매현황
+//- 설치된 장치목록
+
+block contents
+    #content.col-md-12
+        //- 총 판매 현황(2분류로 나눠짐, 결제가 되었는지?)
+        h4 {{ title }}
+        .card
+            .header
+                h4.title Striped Table with Hover
+                p.category Here is a subtitle for this table
+                select.from-control
+                    option 미수금
+                    option 수급완료
+            .content.table-responsive.table-full-width
+                table.table.table-hover.table-striped
+                    thead
+                        th ID
+                        th Name
+                        th Salary
+                        th Country
+                        th City
+                    tbody
+                        tr(v-for="sell in sells")
+                            td 1
+                            td Dakota Rice
+                            td $36,738
+                            td Niger
+                            td Oud-Turnhout
+
+block scripts
+    script.
+        var vm = new Vue({
+            el: '#content',
+            data() {
+                return {
+                    title: 'title222',
+                    sells: []
+                }
+            },
+            created () {
+                let self = this;
+
+            }
+        })
