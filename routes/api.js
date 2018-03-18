@@ -3,8 +3,8 @@ const db = require('../modules/database');
 
 // 업체정보 가져오기
 router.get('/user', (req, res) => {
-    let query = `SELECT email, name, tel, phone, fax, address, bankName, accountNumber, accountName, paymentInfo FROM Companys WHERE id = ? LIMIT 1`;
-    let companyId = 1;
+    let query = `SELECT companyNumber, email, name, tel, phone, fax, address, bankName, accountNumber, accountName, paymentInfo FROM Companys WHERE id = ? LIMIT 1`;
+    let companyId = req.session.passport.user.id;
 
     db.query(query, [companyId])
         .then(result => {
@@ -16,7 +16,7 @@ router.get('/user', (req, res) => {
 // 업체 상품 정보
 router.get('/products', (req, res) => {
     let query = `SELECT * FROM Products WHERE companyId = ?`;
-    let companyId = 1;
+    let companyId = req.session.passport.user.id;
 
     db.query(query, [companyId])
         .then(result => {
@@ -31,7 +31,7 @@ router.get('/products', (req, res) => {
 router.post('/product', (req, res) => {
     let product = req.body;
     let query = `INSERT INTO Products SET ?`;
-    let companyId = 1;
+    let companyId = req.session.passport.user.id;
     product.companyId = companyId;
     product.create_at = new Date();
 
@@ -46,7 +46,7 @@ router.post('/product', (req, res) => {
 });
 
 router.get('/payments', (req, res) => {
-    let companyId = 1;
+    let companyId = req.session.passport.user.id;
     let query = `SELECT * FROM CompanyPayments WHERE companyId = ?`;
 
     db.query(query, [companyId])
@@ -61,7 +61,7 @@ router.get('/payments', (req, res) => {
 // 장치 목록 가져오기
 router.get('/machines', (req, res) => {
     let query = `SELECT * FROM Machines WHERE companyId = ? ORDER BY create_at DESC`;
-    let companyId = 1;
+    let companyId = req.session.passport.user.id;
 
     db.query(query, [companyId])
         .then(result => {
@@ -107,7 +107,7 @@ router.delete('/product/:id', (req, res) => {
 // 업체정보 변경
 router.put('/user', (req, res) => {
     let params = req.body.params;
-    let companyId = 1;
+    let companyId = req.session.passport.user.id;
     
     delete params.email;
 
@@ -126,7 +126,7 @@ router.put('/user', (req, res) => {
 // 상품별 종합 판매현황(PayOT 미결제 OR 결제 처리 사항)
 router.get('/sellList/:start/:end/:state', (req, res) => {
     let startDate = req.params.start;
-    let endDate = req.params.start;
+    let endDate = req.params.end;
     let state = req.params.state == 'true';
     
     let query = `
@@ -141,11 +141,11 @@ router.get('/sellList/:start/:end/:state', (req, res) => {
     WHERE 
         Payments.companyId = ? 
         AND Payments.sendToCompany = ?
-        AND DATE(Payments.pay_at) > ?
-        AND DATE(Payments.pay_at) < ?
+        AND DATE(Payments.pay_at) >= ?
+        AND DATE(Payments.pay_at) <= ?
     GROUP BY Payments.productId`;
 
-    let companyId = 1;
+    let companyId = req.session.passport.user.id;
     db.query(query, [companyId, state, startDate, endDate])
         .then(result => {
             res.status(200).json(result);
@@ -156,7 +156,7 @@ router.get('/sellList/:start/:end/:state', (req, res) => {
         });
 });
 
-router.get('/all/:startDate/:endDate', (req, res) => {
+router.get('/all/:start/:end/:state', (req, res) => {
     let query = `
         SELECT
             *
@@ -165,15 +165,18 @@ router.get('/all/:startDate/:endDate', (req, res) => {
         LEFT JOIN Products ON Payments.productId = Products.id
         WHERE
             Payments.companyId = ?
-            AND DATE(Payments.pay_at) >= ? AND DATE(Payments.pay_at) <= ?
+            AND Payments.sendToCompany = ?
+            AND DATE(Payments.pay_at) >= ?
+            AND DATE(Payments.pay_at) <= ?
         ORDER BY Payments.pay_at DESC`;
 
-    let startDate = req.query.startDate;
-    let endtDate = req.query.endDate;
+    let startDate = req.params.start;
+    let endtDate = req.params.end;
+    let state = req.params.state == 'true' ? 1 : 0;
 
-    let companyId = 1;
+    let companyId = req.session.passport.user.id;
 
-    db.query(query, [companyId, startDate, endtDate])
+    db.query(query, [companyId, state, startDate, endtDate])
         .then(result => {
             res.status(200).json(result);
         })
@@ -181,6 +184,11 @@ router.get('/all/:startDate/:endDate', (req, res) => {
             console.log(err);
             res.status(500).json(err);
         });
+});
+
+router.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('../login');
 });
 
 module.exports = router;

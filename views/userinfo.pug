@@ -17,6 +17,11 @@ block contents
                                 label(for="exampleInputEmail1") 이메일
                                 input.form-control(type="email" disabled="" placeholder="이메일" v-model="user.email")
                     .row
+                        .col-md-12
+                            .form-group
+                                label 사업자 번호
+                                input.form-control(type="text" placeholder="사업자번호" v-model="user.companyNumber")
+                    .row
                         .col-md-6
                             .form-group
                                 label 계좌은행
@@ -25,6 +30,11 @@ block contents
                             .form-group
                                 label 계좌주
                                 input.form-control(type="text" placeholder="계좌주" v-model="user.accountName")
+                    .row
+                        .col-md-12
+                            .form-group
+                                label 계좌번호
+                                input.form-control(type="text" placeholder="계좌번호" v-model="user.accountNumber")
                     .row
                         .col-md-4
                             .form-group
@@ -43,11 +53,7 @@ block contents
                             .form-group
                                 label 주소
                                 input.form-control(type="text" placeholder="주소" v-model="user.address")
-                    .row
-                        .col-md-12
-                            .form-group
-                                label 계좌번호
-                                input.form-control(type="text" placeholder="계좌번호" v-model="user.accountNumber")
+                    
                     .row
                         .col-md-12
                             .form-group
@@ -85,6 +91,13 @@ block scripts
                         })
                         .catch(err => {
                             self.showDialog = false;
+                        });
+                },
+                refresh: function() {
+                    let self = this;
+                    axios.get('/api/user')
+                        .then(result => {
+                            self.user = result.data;
                         });
                 }
             }

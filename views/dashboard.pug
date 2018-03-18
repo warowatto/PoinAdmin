@@ -68,10 +68,14 @@ block contents
                 .row
                     .col-md-8
                         .input-group.input-daterange
-                            input.datepicker.form-control(type="text" v-model="startDate")
+                            input.datepicker.form-control(type="text" v-model="startDate2")
                             .input-group-addon ~
-                            input.datepicker.form-control(type="text" v-model="endDate")
-                    .col-md-4
+                            input.datepicker.form-control(type="text" v-model="endDate2")
+                    .col-md-2
+                        select.from-control(v-model="bill2" v-on:change="update")
+                            option 미수금
+                            option 수금완료
+                    .col-md-2
                         button.btn.btn-info.btn-fill.pull-right(v-on:click="update") 조회하기
             .content.table-responsive.table-full-width
                 table.table.table-hover.table-striped
@@ -111,33 +115,55 @@ block scripts
         var vm = new Vue({
             el: '#content',
             data() {
+
+                let cv = function(date) {
+                    var d = new Date(date),
+                        month = '' + (d.getMonth() + 1),
+                        day = '' + d.getDate(),
+                        year = d.getFullYear();
+
+                    if (month.length < 2) month = '0' + month;
+                    if (day.length < 2) day = '0' + day;
+
+                    return [year, month, day].join('-');
+                };
+
+                let now = new Date();
+
                 return {
                     bill: '미수금',
+                    bill2: '미수금',
                     payments: [],
                     sells: [],
                     allPayments: [],
-                    startDate: '2018-01-01',
-                    endDate: '2018-03-30'
+                    startDate: cv(new Date().setDate(now.getDate() - 7)),
+                    endDate: cv(new Date()),
+                    startDate2: cv(new Date().setDate(now.getDate() - 7)),
+                    endDate2: cv(new Date())
                 }
             },
             created () {
                 let self = this;
                 let type = self.isBills() ? 'true' : 'false';
-                let path = `/api/sellList/${self.startDate}/${self.endDate}/${type}`;
-                axios.get(path)
-                    .then(result => {
-                        let data = result.data;
-                        self.sells = data;
-                    });
 
                 axios.get('/api/payments')
                     .then(result => {
                         self.payments = result.data;
                     });
+                let state = self.bill2 == '미수금' ? 'false' : 'true';
 
-                axios.get('/api/sellList')
+                let path1 = `/api/sellList/${self.startDate}/${self.endDate}/${self.bill == '미수금' ? 'false' : 'true'}`;
+                let path2 = `/api/all/${self.startDate}/${self.endDate}/${self.bill2 == '미수금' ? 'false' : 'true'}`;
+
+                axios.get(path1)
                     .then(result => {
-                        self.allPayments = result.data;
+                        let data = result.data;
+                        self.sells = data;
+                    });
+
+                axios.get(path2)
+                    .then(result => {
+                        self.allPayments = result.data
                     });
             },
             methods: {
@@ -154,15 +180,27 @@ block scripts
                 },
                 update: function() {
                     let self = this;
-                    let type = self.isBills() ? 'true' : 'false';
-                    self.startDate = $('.datepicker')[0].value;
-                    self.endDate = $('.datepicker')[1].value;
-                    let path = `/api/sellList/${self.startDate}/${self.endDate}/${type}`;
-                    console.log(path);
-                    axios.get(path)
+                    self.dateUpdate();
+
+                    axios.get('/api/payments')
+                        .then(result => {
+                            self.payments = result.data;
+                        });
+
+                    let path1 = `/api/sellList/${self.startDate}/${self.endDate}/${self.bill == '미수금' ? 'false' : 'true'}`;
+                    let path2 = `/api/all/${self.startDate2}/${self.endDate2}/${self.bill2 == '미수금' ? 'false' : 'true'}`;
+
+                    console.log(path1);
+                    console.log(path2);
+                    axios.get(path1)
                         .then(result => {
                             let data = result.data;
                             self.sells = data;
+                        });
+
+                    axios.get(path2)
+                        .then(result => {
+                            self.allPayments = result.data
                         });
                 },
                 isBills: function() {
@@ -178,6 +216,14 @@ block scripts
                     if (day.length < 2) day = '0' + day;
 
                     return [year, month, day].join('-');
+                },
+                dateUpdate: function() {
+                    let datePicker = $('.datepicker');
+                    
+                    this.startDate = datePicker[0].value;
+                    this.endDate = datePicker[1].value;
+                    this.startDate2 = datePicker[2].value;
+                    this.endDate2 = datePicker[3].value;
                 }
             },
             computed: {

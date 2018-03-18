@@ -9,6 +9,10 @@ var index = require('./routes/index');
 var users = require('./routes/users');
 
 var app = express();
+var passport = require('passport');
+var session = require('express-session');
+var hash = require('./modules/password');
+var db = require('./modules/database');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -22,19 +26,67 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(session({ secret: 'payot', resave: true, saveUninitialized: false }));
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use('/', index);
 app.use('/users', users);
 app.use('/api', require('./routes/api'));
 
+require('./modules/auth')();
+
+app.get('/login', (req, res) => {
+  res.render('login');
+});
+
+app.post('/login', passport.authenticate('local', {
+  failureRedirect: '/login',
+  successRedirect: '/'
+}), (req, res) => {
+  
+});
+
+app.get('/signup', (req, res) => {
+  res.render('signup');
+});
+
+app.post('/signup', (req, res) => {
+  let params = req.body;
+  
+  if (params.password != params.passwordChack) {
+    res.redirect('/signup');
+  } else {
+    hash.create(params.password)
+      .subscribe(
+        result => {
+            let query = `INSERT INTO Companys SET ?`;
+            params.password = result.hash;
+            params.salt = result.salt;
+            delete params.passwordChack;
+
+            db.query(query, [params])
+              .then(result => {
+                res.redirect('/login');
+              })
+              .catch(err => {
+                console.log(err);
+                res.redirect('/signup');
+              });
+        })
+  }
+});
+
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   var err = new Error('Not Found');
   err.status = 404;
   next(err);
 });
 
+
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
