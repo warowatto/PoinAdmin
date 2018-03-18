@@ -137,4 +137,27 @@ router.get('/sellList/:start/:end/:state', (req, res) => {
         });
 });
 
+router.get('/sellList', (req, res) => {
+    let query = `
+        SELECT
+            *
+        FROM Payments
+        LEFT JOIN Machines ON Payments.machineId = Machines.id
+        LEFT JOIN Products ON Payments.productId = Products.id
+        WHERE
+            Payments.companyId = ?
+        ORDER BY Payments.pay_at DESC`;
+
+    let companyId = 1;
+
+    db.query(query, [companyId])
+        .then(result => {
+            res.status(200).json(result);
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json(err);
+        });
+});
+
 module.exports = router;
