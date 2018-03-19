@@ -10,11 +10,11 @@ router.post('/install/user', (req, res) => {
 
     db.query(query, [email])
         .then(result => {
-            if(result[0]) {
+            if (result[0]) {
                 let user = result[0];
                 hash.getHash(password, user.salt)
                     .subscribe(pw => {
-                        if(pw == user.password) {
+                        if (pw == user.password) {
                             delete user.password;
                             delete user.salt;
 
@@ -32,7 +32,7 @@ router.post('/install/user', (req, res) => {
         });
 });
 
-router.get('/machineType', (req, res)=> {
+router.get('/machineType', (req, res) => {
     let query = `SELECT * FROM MachineTypes`;
 
     db.query(query)
@@ -167,7 +167,7 @@ router.delete('/product/:id', (req, res) => {
 router.put('/user', (req, res) => {
     let params = req.body.params;
     let companyId = req.session.passport.user.id;
-    
+
     delete params.email;
 
     let query = `UPDATE Companys SET ? WHERE id = ?`;
@@ -187,7 +187,7 @@ router.get('/sellList/:start/:end/:state', (req, res) => {
     let startDate = req.params.start;
     let endDate = req.params.end;
     let state = req.params.state == 'true';
-    
+
     let query = `
     SELECT
         Payments.productId as id,
@@ -242,6 +242,33 @@ router.get('/all/:start/:end/:state', (req, res) => {
         .catch(err => {
             console.log(err);
             res.status(500).json(err);
+        });
+});
+
+// 상품등록
+router.post('/insertProduct', (req, res) => {
+    let machineIds = req.body.machines;
+    let productIds = req.body.products;
+
+    let params = [];
+
+    let query = `INSERT INTO MachineProducts (machineId, productId) VALUES ?`;
+
+    console.log(machineIds);
+    console.log(productIds);
+
+    for (p in productIds) {
+        for (m in machineIds) {
+            params.push([productIds[p], machineIds[m]]);
+        }
+    }
+
+    db.query(query, [params])
+        .then(result => {
+            res.status(200).json({ success: true });
+        })
+        .catch(err => {
+            res.status(500).json({ error: err });
         });
 });
 
