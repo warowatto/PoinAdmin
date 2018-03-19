@@ -45,7 +45,7 @@ router.post('/install/machine', (req, res) => {
     let machine = req.body;
     let query = `INSERT INTO Machines SET ?`;
 
-    machine.create_at = 'NOW()';
+    machine.create_at = new Date();
 
     db.query(query, [machine])
         .then(result => {
