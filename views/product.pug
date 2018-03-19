@@ -90,9 +90,11 @@ block scripts
                 insertProduct: function() {
                     let self = this;
                     let path = '/api/product';
+
+                    console.log(self.addProduct);
                     axios.post(path, self.addProduct)
                         .then(result => {
-                            self.products.push(self.addProduct);
+                            self.refresh();
                             self.clearForm();
                         });
                 },
@@ -111,7 +113,6 @@ block scripts
                     let selectProducts = self.products
                                             .filter(item => { return item.checked })
                                             .map(item => { return item.id });
-
                     axios.post('/install', selectProducts)
                         .then(result => {
                             self.visible = true;

@@ -87,8 +87,10 @@ router.get('/products', (req, res) => {
 // 상품등록하기
 router.post('/product', (req, res) => {
     let product = req.body;
+    delete product.visible;
     let query = `INSERT INTO Products SET ?`;
     let companyId = req.session.passport.user.id;
+
     product.companyId = companyId;
     product.create_at = new Date();
 
