@@ -229,15 +229,16 @@ block scripts
                     if (payment.checks == 1) {
                         return payment.total;
                     } else {
-                        let onePrice = payment.machinePrice + ((payment.price - payment.machinePrice) / 2);
-                        return onePrice * payment.counter;
+                        let price = this.getSellPrice(payment);
+                        return price * payment.counter;
                     }
                 },
                 getSellPrice: function(payment) {
                     if (payment.checks == 1) {
                         return payment.price;
                     } else {
-                        return payment.machinePrice + ((payment.price - payment.machinePrice) / 2);
+                        let price = payment.machinePrice + ((payment.price - payment.machinePrice) / 2);
+                        return price - (price * 0.032);
                     }
                 }
             },
