@@ -30,7 +30,6 @@ module.exports = () => {
                                         delete result[0].salt;
                                         done(null, result[0]);
                                     } else {
-                                        console.log('여기로 들어와??');
                                         done(null, false, { message: '비밀번호가 다릅니다' });
                                     }
                                 }, 

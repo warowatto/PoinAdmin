@@ -7,8 +7,6 @@ router.get('/', function (req, res, next) {
   if (!req.session.passport) {
     res.redirect('/login');
   }
-
-  console.log(req.session.passport);
   res.render('dashboard', { title: 'Express' });
 });
 
