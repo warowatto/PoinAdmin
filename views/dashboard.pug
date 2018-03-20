@@ -236,7 +236,7 @@ block scripts
                 },
                 getSellPrice: function(payment) {
                     if (payment.checks == 1) {
-                        return Math.ceil(payment.price - (price * 0.032));
+                        return Math.ceil(payment.price - (payment.price * 0.032));
                     } else {
                         let price = payment.machinePrice + ((payment.price - payment.machinePrice) / 2);
                         return Math.ceil(price - (price * 0.032));
