@@ -259,7 +259,7 @@ router.post('/insertProduct', (req, res) => {
 
     let params = [];
 
-    let query = `INSERT INTO MachineProducts (machineId, productId) VALUES ?`;
+    let query = `INSERT INTO MachineProducts (productId, machineId) VALUES ?`;
 
     for (p in productIds) {
         for (m in machineIds) {
