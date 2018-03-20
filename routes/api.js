@@ -158,10 +158,14 @@ router.put('/machine', (req, res) => {
 
 // 상품 삭제
 router.delete('/product/:id', (req, res) => {
-    let machineId = req.params.id;
+    let productId = req.params.id;
     let query = `DELETE FROM Products WHERE id = ?`;
+    let machinejoinRemoveQuery = `DELETE FROM MachineProducts WHERE productId = ?`;
 
-    db.query(query, [machineId])
+    db.query(query, [productId])
+        .then(result => { 
+            return db.query(machinejoinRemoveQuery, [productId])
+        })
         .then(result => {
             res.status(200).json({ sucess: true });
         })
