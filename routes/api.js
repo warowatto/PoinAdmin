@@ -41,21 +41,29 @@ router.get('/machineType', (req, res) => {
         });
 });
 
+// 장치 설치하기
 router.post('/install/machine', (req, res) => {
     let machine = req.body;
-    let query = `INSERT INTO Machines SET ?`;
+    let findQuery = `SELECT * FROM Machines WHERE macAddress = ?`;
+    let insertQuery = `INSERT INTO Machines SET ?`;
+    let updateQuery = `UPDATE Machines SET ? WHERE id = ?`;
 
-    machine.create_at = new Date();
-
-    db.query(query, [machine])
-        .then(result => {
-            if (result) {
+        db.query(findQuery, [machine.macAddress])
+            .then(result => {
+                if (result.length == 0) {
+                    machine.create_at = new Date();
+                    return db.query(insertQuery, machine);
+                } else {
+                    let machineId = result[0].id;
+                    return db.query(updateQuery, [machine, machineId]);
+                }
+            })
+            .then(result => {
                 res.status(200).json({ success: true });
-            }
-        })
-        .catch(err => {
-            res.status(500).json({ error: err });
-        });
+            })
+            .catch(err => {
+                res.status(500).json({ error: err });    
+            });
 });
 
 // 업체정보 가져오기
@@ -119,7 +127,8 @@ router.get('/payments', (req, res) => {
 
 // 장치 목록 가져오기
 router.get('/machines', (req, res) => {
-    let query = `SELECT * FROM Machines WHERE companyId = ? ORDER BY create_at DESC`;
+    let query = `
+    SELECT * FROM Machines WHERE companyId = ? ORDER BY create_at DESC`;
     let companyId = req.session.passport.user.id;
 
     db.query(query, [companyId])
