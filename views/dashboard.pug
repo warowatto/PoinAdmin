@@ -52,13 +52,15 @@ block contents
                 table.table.table-hover.table-striped
                     thead
                         th 상품명
+                        th 상품당 판매수익
                         th 판매액
                         th 판매한 장치수
                         th 판매횟수
                     tbody
                         tr(v-for="sell in sells")
                             td {{ sell.name }}
-                            td {{ sell.total }}
+                            td {{ getSellPrice(sell) }}
+                            td {{ getTotal(sell) }}
                             td {{ sell.machines }}
                             td {{ sell.counter }}
         
@@ -190,8 +192,6 @@ block scripts
                     let path1 = `/api/sellList/${self.startDate}/${self.endDate}/${self.bill == '미수금' ? 'false' : 'true'}`;
                     let path2 = `/api/all/${self.startDate2}/${self.endDate2}/${self.bill2 == '미수금' ? 'false' : 'true'}`;
 
-                    console.log(path1);
-                    console.log(path2);
                     axios.get(path1)
                         .then(result => {
                             let data = result.data;
@@ -224,6 +224,21 @@ block scripts
                     this.endDate = datePicker[1].value;
                     this.startDate2 = datePicker[2].value;
                     this.endDate2 = datePicker[3].value;
+                },
+                getTotal: function(payment) {
+                    if (payment.checks == 1) {
+                        return payment.total;
+                    } else {
+                        let onePrice = payment.machinePrice + ((payment.price - payment.machinePrice) / 2);
+                        return onePrice * payment.counter;
+                    }
+                },
+                getSellPrice: function(payment) {
+                    if (payment.checks == 1) {
+                        return payment.price;
+                    } else {
+                        return payment.machinePrice + ((payment.price - payment.machinePrice) / 2);
+                    }
                 }
             },
             computed: {

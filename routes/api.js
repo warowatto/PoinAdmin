@@ -107,7 +107,6 @@ router.post('/product', (req, res) => {
             res.status(200).json({ sucess: true })
         })
         .catch(err => {
-            console.log(err);
             res.status(500).json({ error: err });
         });
 });
@@ -136,7 +135,6 @@ router.get('/machines', (req, res) => {
             res.status(200).json(result);
         })
         .catch(err => {
-            console.log(err);
             res.status(500).json({ error: err });
         });
 });
@@ -186,7 +184,6 @@ router.put('/user', (req, res) => {
             res.status(200).json({ success: true });
         })
         .catch(err => {
-            console.log(err);
             res.status(500).json({ error: err });
         });
 });
@@ -203,7 +200,10 @@ router.get('/sellList/:start/:end/:state', (req, res) => {
         Products.name as name,
         COUNT(Payments.id) as counter,
         COUNT(DISTINCT machineId) as machines,
-        SUM(defaultPrice) as total
+        SUM(defaultPrice) as total,
+        Products.machinePrice,
+        Products.price,
+        (Products.price = Products.machinePrice) as checks
     FROM Payments
     LEFT OUTER JOIN Products ON Products.id = Payments.productId
     WHERE 
@@ -219,7 +219,6 @@ router.get('/sellList/:start/:end/:state', (req, res) => {
             res.status(200).json(result);
         })
         .catch(err => {
-            console.log(err);
             res.status(500).json(err);
         });
 });
@@ -249,7 +248,6 @@ router.get('/all/:start/:end/:state', (req, res) => {
             res.status(200).json(result);
         })
         .catch(err => {
-            console.log(err);
             res.status(500).json(err);
         });
 });
@@ -262,9 +260,6 @@ router.post('/insertProduct', (req, res) => {
     let params = [];
 
     let query = `INSERT INTO MachineProducts (machineId, productId) VALUES ?`;
-
-    console.log(machineIds);
-    console.log(productIds);
 
     for (p in productIds) {
         for (m in machineIds) {
