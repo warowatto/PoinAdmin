@@ -234,6 +234,7 @@ router.get('/all/:start/:end/:state', (req, res) => {
         FROM Payments
         LEFT JOIN Machines ON Payments.machineId = Machines.id
         LEFT JOIN Products ON Payments.productId = Products.id
+        LEFT JOIN MachineTypes ON MachineTypes.id = Machines.typeId
         WHERE
             Payments.companyId = ?
             AND Payments.sendToCompany = ?

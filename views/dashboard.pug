@@ -18,7 +18,7 @@ block contents
         //- 총 판매 현황(2분류로 나눠짐, 결제가 되었는지?)
         .card
             .header
-                h4.title PayOT 지불현황
+                h4.title PayOT 정산현황
             .content.table-responsive.table-full-width
                 table.table.table-hover.table-striped
                     thead
@@ -51,11 +51,11 @@ block contents
             .content.table-responsive.table-full-width
                 table.table.table-hover.table-striped
                     thead
-                        th 상품명
-                        th 상품당 판매수익
-                        th 판매액
-                        th 판매한 장치수
-                        th 판매횟수
+                        th 서비스 종류
+                        th 종류별 수익
+                        th 총 판매액
+                        th 사용 된 장치 수
+                        th 사용횟수
                     tbody
                         tr(v-for="sell in sells")
                             td {{ sell.name }}
@@ -82,16 +82,16 @@ block contents
             .content.table-responsive.table-full-width
                 table.table.table-hover.table-striped
                     thead
-                        th 상품명
-                        th MAC
-                        th 결제장치
+                        th 장치명
+                        th 서비스 종류
+                        th 장비위치
                         th 결제가격
-                        th 지급여부
+                        th 정산여부
                         th 결제일자
                     tbody
                         tr(v-for="item in allPayments")
+                            td {{ item.deviceName }}
                             td {{ item.name }}
-                            td {{ item.macAddress }}
                             td {{ item.displayName }}
                             td {{ item.price }}
                             td 
@@ -166,6 +166,7 @@ block scripts
                 axios.get(path2)
                     .then(result => {
                         self.allPayments = result.data
+                        console.log(result.data);
                     });
             },
             methods: {
