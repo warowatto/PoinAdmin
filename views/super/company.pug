@@ -1,0 +1,216 @@
+extend empty1
+
+block contents
+    #content
+        h3(v-if="sells == 0") {{ company.name }} 은(는) 진행할 결제사항이 없습니다.
+        .card(v-if="sells > 0")
+            .header
+                h4.title 미지급 판매내역
+                p.category 결제되지 않은 {{ company.name }}의 총 가격은 {{ totalPrice }}원 입니다
+            .content.table-responsive.table-full-width
+                table.table.table-hover.table-striped
+                    thead
+                        th 상품명
+                        th 판매가
+                        th 단위당 결제가
+                        th 판매횟수
+                        th 총 가격
+                    tbody
+                        tr(v-for="sell in sells")
+                            td {{ sell.name }}
+                            td {{ sell.price }}
+                            td {{ price(sell) }}
+                            td {{ sell.count }}
+                            td {{ sell.count * price(sell) }}
+        .card
+            .header
+                h4.title 업체 정보
+            .content
+                form
+                    .row
+                        .col-md-5
+                            .form-group
+                                label 업체명
+                                input.form-control(type="text" disabled placeholder="업체명" v-model="company.name")
+                        .col-md-7
+                            .form-group
+                                label(for="exampleInputEmail1") 이메일
+                                input.form-control(type="email" disabled placeholder="이메일" v-model="company.email")
+                    .row
+                        .col-md-12
+                            .form-group
+                                label 사업자 번호
+                                input.form-control(type="text" disabled placeholder="사업자번호" v-model="company.companyNumber")
+                    .row
+                        .col-md-6
+                            .form-group
+                                label 계좌은행
+                                input.form-control(type="text" disabled placeholder="계좌은행" v-model="company.bankName")
+                        .col-md-6
+                            .form-group
+                                label 계좌주
+                                input.form-control(type="text" disabled placeholder="계좌주" v-model="company.accountName")
+                    .row
+                        .col-md-12
+                            .form-group
+                                label 계좌번호
+                                input.form-control(type="text" disabled placeholder="계좌번호" v-model="company.accountNumber")
+                    .row
+                        .col-md-4
+                            .form-group
+                                label 전화번호
+                                input.form-control(type="text" disabled placeholder="전화번호" v-model="company.tel")
+                        .col-md-4
+                            .form-group
+                                label 휴대전화번호
+                                input.form-control(type="text" disabled placeholder="휴대전화번호" v-model="company.phone")
+                        .col-md-4
+                            .form-group
+                                label FAX
+                                input.form-control(type="text" disabled placeholder="FAX" v-model="company.fax")
+                    .row
+                        .col-md-12
+                            .form-group
+                                label 주소
+                                input.form-control(type="text" disabled placeholder="주소" v-model="company.address")
+                    
+                    .row
+                        .col-md-12
+                            .form-group
+                                label 결제시 알림사항
+                                textarea.form-control(rows="5" disabled v-model="company.paymentInfo")
+        .card
+            .header
+                h4.title 결제 처리
+            .content
+                form
+                    .row
+                        .col-md-7
+                            .form-group
+                                label 제목
+                                input.form-control(type="text" placeholder="결제시 알릴 제목을 작성해 주세요" v-model="payment.title")
+                        .col-md-5
+                            .form-group
+                                label 금액
+                                input.form-control(type="number" placeholder="결제가격을 입력해 주세요" v-model="payment.price")
+                    .row
+                        .col-md-12
+                            .form-group
+                                label 내용
+                                textarea.form-control(rows="5" placeholder="결제 내용을 입력해 주세요" v-model="payment.description")
+            button.btn.btn-info.btn-fill.pull-right(type="submit" v-on:click="updatePayment()" :disabled="!isActivate") 결제 정보 저장
+            .clearfix
+
+        .card
+            .header
+                h4.title 장치 정보
+                p.category 설치된 장치의 정보 입니다
+            .content.table-responsive.table-full-width
+                table.table.table-hover.table-striped
+                    thead
+                        th 장치명
+                        th 위치
+                        th 설치일자
+                        th 판매여부
+                    tbody
+                        tr(v-for="machine in machines")
+                            td {{ machine.deviceName }}
+                            td 
+                                a(:href="'/super/machine/' + machine.id") {{ machine.displayName }}
+                            td {{ convertDate(machine.create_at) }}
+                            td {{ machine.isRunning = 1 ? '판매중' : '판매중지' }}
+                        
+
+block scripts
+    script.
+        var app = new Vue({
+            el: '#content',
+            data() {
+                return {
+                    id: #{id} ,
+                    company: {},
+                    sells: [],
+                    machines: [],
+                    payment: {}
+                }
+            },
+            computed: {
+                isActivate : function() {
+                    let state = (this.payment.title != null) && (this.payment.price != null) && (this.sells > 0);
+                    return state;
+                },
+                totalPrice: function() {
+                    let total = 0;
+                    for(index in this.sells) {
+                        let sell = this.sells[index];
+                        let price = this.price(sell);
+                        let count = sell.count;
+
+                        total += count * price;
+                    }
+
+                    return total;
+                }
+            },
+            created() {
+                let self = this;
+                axios.get('/super_api/company/' + self.id)  
+                    .then(result => {
+                        let data = result.data;
+                        self.company = data.company;
+                        self.sells = data.sells;
+                        self.machines = data.machines;
+                    });
+            },
+            methods: {
+                convertDate(date) {
+                    return moment(date).format('YYYY-MM-DD');
+                },
+                machinePage(machineId) {
+                    document.location = '/super/machine/' + machineId;
+                },
+                price(product) {
+                    let price = 0;
+                    if(product.machinePrice == product.price) {
+                        price = product.price;
+                    } else {
+                        price = product.machinePrice + ((product.price - product.machinePrice) / 2);
+                    }
+
+                    return Math.ceil(price - (price * 0.032));
+                },
+                updatePayment() {
+                    let self = this;
+                    let path = `/super_api/payment`;
+                    
+                    let paymentIds = [];
+                    let idArrays = self.sells.map(item => { return item.ids.split(',') });
+                    
+                    for(i in idArrays) {
+                        for(j in idArrays[i]) {
+                            console.log(idArrays[i][j]);
+                            paymentIds.push(idArrays[i][j]);
+                        }
+                    }
+
+                    let data = {
+                        companyId: self.id,
+                        paymentIds: paymentIds,
+                        title: self.payment.title,
+                        amount: self.payment.price,
+                        description: self.payment.description
+                    }
+
+                    axios.post(path, data)
+                        .then(result => {
+                            alert("결제처리가 완료되었습니다")
+                            self.sells = [];
+                            self.payment = {};
+                        })
+                        .catch(err => {
+                            self.payment = {};
+                        })
+                },
+
+            }
+        });

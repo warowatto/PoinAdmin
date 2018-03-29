@@ -1,0 +1,42 @@
+extend empty
+
+block contents
+    #content.col-md-12
+        //- 총 판매 현황(2분류로 나눠짐, 결제가 되었는지?)
+        .card
+            .header
+                h4.title 결제 대기 업체 리스트
+            .content.table-responsive.table-full-width
+                table.table.table-hover.table-striped
+                    thead
+                        th 업체명
+                    tbody
+                        tr(v-for="item in list")
+                            
+                            td
+                                a(:href="'/super/company/' + item.id") {{ item.name }}
+
+    block scripts
+        script.
+            var app = new Vue({
+                el: '#content',
+                data() {
+                    return {
+                        list: [],
+                    }
+                },
+                created() {
+                    let self = this;
+                    axios.get('/super_api/dashboard')
+                        .then(result => {
+                            console.log(result);
+                            self.list = result.data;
+                        });
+                },
+                computed: {
+
+                },
+                methods: {
+
+                }
+            });

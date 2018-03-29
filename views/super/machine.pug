@@ -1,0 +1,78 @@
+extends empty1
+
+block contents
+    #content.col-lg-12
+        h3(v-if="!isShow") 판매 내역이 없습니다
+
+        .card(v-if="isShow")
+            .header
+                h4.title {{ list[0].deviceName }} {{ list[0].displayName }} 판매 목록
+                p 총 판매금액은 {{ total }}원 이며 {{ list.length }}건 입니다
+            .content.table-responsive.table-full-width
+                table.table.table-hover.table-striped
+                    thead
+                        th 상품명
+                        th 상품가격
+                        th 장치동작가격
+                        th 결제금액
+                        th 결제일자
+                        th 지급여부
+
+                    tbody
+                        tr(v-for="item in list")
+                            td {{ item.name }}
+                            td {{ item.price }}
+                            td {{ item.machinePrice }}
+                            td {{ price(item) }}
+                            td {{ dateConvert(item.pay_at) }}
+                            td {{ item.sendToCompany == 0 ? "결제대기" : "지급완료" }}
+
+block scripts
+    script.
+        new Vue({
+            el: '#content',
+            data() {
+                return {
+                    companyId : #{id},
+                    list: [],
+                    isShow: false
+                }
+            },
+            computed: {
+                total: function() {
+                    let self = this;
+                    let total = 0;
+                    for(index in self.list) {
+                        total += self.price(self.list[index]);
+                    }
+                    return total;
+                }
+            },
+            created() {
+                let self = this;
+                let path = `/super_api/machine/` + #{id};
+                axios.get(path)
+                    .then(result => {
+                        self.list = result.data;
+                        self.isShow = self.list.length > 0;
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+            },
+            methods: {
+                price: (product) => {
+                    let price = 0;
+                    if(product.machinePrice == product.price) {
+                        price = product.price;
+                    } else {
+                        price = product.machinePrice + ((product.price - product.machinePrice) / 2);
+                    }
+
+                    return Math.ceil(price - (price * 0.032));
+                },
+                dateConvert: (date) => {
+                    return moment(date).format('YY년 M월 D일 HH시 mm분');
+                }
+            }
+        });
