@@ -2,8 +2,9 @@ extend empty1
 
 block contents
     #content
-        h3(v-if="sells == 0") {{ company.name }} 은(는) 진행할 결제사항이 없습니다.
-        .card(v-if="sells > 0")
+        h3(v-if="sells.length == 0") {{ company.name }} 은(는) 진행할 결제사항이 없습니다.
+
+        .card(v-if="sells.length > 0")
             .header
                 h4.title 미지급 판매내역
                 p.category 결제되지 않은 {{ company.name }}의 총 가격은 {{ totalPrice }}원 입니다
