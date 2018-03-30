@@ -127,7 +127,7 @@ router.get('/payments', (req, res) => {
 // 장치 목록 가져오기
 router.get('/machines', (req, res) => {
     let query = `
-    SELECT * FROM Machines WHERE companyId = ? ORDER BY create_at DESC`;
+    SELECT * FROM Machines WHERE companyId = ? ORDER BY deviceName DESC`;
     let companyId = req.session.passport.user.id;
 
     db.query(query, [companyId])
